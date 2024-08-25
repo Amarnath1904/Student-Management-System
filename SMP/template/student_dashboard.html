@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <section class="bg-white dark:bg-gray-900 h-screen ">
+        <div class="py-8 px-4 mx-auto max-w-screen-xl sm:py-16 lg:px-6">
+            <div class="max-w-screen-md">
+                <h2 class="mb-4 text-4xl tracking-tight font-extrabold text-gray-900 dark:text-white">Welcome to library dashboard</h2>
+                <p class="mb-8 font-light text-gray-500 sm:text-xl dark:text-gray-400">
+                    The pursuit of learning is not just about grades, but about growing, discovering, and finding your passion.You have to build your dreams, so dive in, stay curious, and let your mind wander freely. We're thrilled to be a part of your academic adventure!
+                </p>
+                <div class="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4">
+                    <a href="{% url 'view_fee_status' %}" class="inline-flex items-center justify-center px-4 py-2.5 text-base font-medium text-center text-white bg-primary-700 rounded-lg hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:focus:ring-primary-900">
+                        View Fee Status
+                    </a>
+                    <a href="{% url 'logout' %}" class="inline-flex items-center justify-center px-4 py-2.5 text-base font-medium text-center text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
+                        Log out
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+{% endblock %}
