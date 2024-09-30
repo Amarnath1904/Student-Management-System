@@ -1,14 +1,19 @@
 from django.db import models
 from django.utils import timezone
 
+
 class Student(models.Model):
-    name = models.CharField(max_length=100, null=False, blank=False, unique=True)
+    user_id = models.CharField(max_length=20, unique=True, null=False, blank=False)  # User ID field
+    name = models.CharField(max_length=100, null=False, blank=False)
     age = models.IntegerField()
     course = models.CharField(max_length=100)
     enrollment_date = models.DateField()
+    profile_image = models.ImageField(upload_to='profile_images/', null=False, blank=False)
+    address = models.TextField(null=False, blank=False)
 
     def __str__(self):
-        return f"{self.id} - {self.name}"
+        return f"{self.user_id} - {self.name}"
+
 
 class FeePlan(models.Model):
     plan_name = models.CharField(max_length=100)

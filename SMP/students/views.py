@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from .models import Student, FeePlan, FeeRecord
+from django.core.files.storage import FileSystemStorage
 from django.db.models import Sum
 from .models import Student, FeeRecord
 from django.contrib import messages
@@ -35,6 +36,69 @@ def login_view(request):
         else:
             return HttpResponse("Invalid credentials")
     return render(request, "login.html")
+
+
+def signup_view(request):
+    if request.method == "POST":
+        user_id = request.POST.get('user_id')  # Retrieve User ID
+        name = request.POST.get('name')
+        age = request.POST.get('age')
+        course = request.POST.get('course')
+        enrollment_date_str = request.POST.get('enrollment_date')
+        address = request.POST.get('address')
+        profile_image = request.FILES.get('profile_image')
+
+        # Validation: Ensure all compulsory fields are filled in
+        if not user_id or not name or not age or not course or not enrollment_date_str or not address or not profile_image:
+            messages.error(request, "All fields, including user ID, address, and profile image, are required.")
+            return redirect('signup')
+
+        try:
+            enrollment_date = datetime.datetime.strptime(enrollment_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            messages.error(request, "Invalid enrollment date format. Use YYYY-MM-DD.")
+            return redirect('signup')
+
+        # Check if the user ID is unique
+        if Student.objects.filter(user_id=user_id).exists():
+            messages.error(request, f"User ID '{user_id}' already exists. Please choose another one.")
+            return redirect('signup')
+
+
+
+        # Handle file upload
+        if profile_image:
+            fs = FileSystemStorage()
+            profile_image_filename = fs.save(profile_image.name, profile_image)
+            profile_image_url = fs.url(profile_image_filename)
+
+        # Create the Student record
+        student = Student.objects.create(
+            user_id=user_id,
+            name=name,
+            age=age,
+            course=course,
+            enrollment_date=enrollment_date,
+            address=address,
+            profile_image=profile_image  # Set the profile image if uploaded
+        )
+
+        # Create a corresponding User
+        user = User.objects.create_user(username=user_id, password=enrollment_date_str)
+        student_group, created = Group.objects.get_or_create(name='Student')
+        user.groups.add(student_group)
+
+        # Log the user in
+        login(request, user)
+        messages.success(
+            request,
+            f"Student '{name}' has been successfully added with User ID '{user_id}' and password '{enrollment_date_str}'."
+        )
+
+        return redirect('student_dashboard')
+
+    return render(request, 'signup.html')
+
 
 def logout_view(request):
     logout(request)
@@ -74,13 +138,14 @@ def manage_students(request):
     if request.user.groups.filter(name="Admin").exists():
         message = ""
         if request.method == "POST":
-            # Manually extract name and age from POST data
+            # Manually extract user_id, name, age, course, and enrollment date from POST data
+            user_id = request.POST.get('user_id')  # Extracting user_id
             name = request.POST.get('name')
             age = request.POST.get('age')
-            course = request.POST.get('course', 'Default Course')  # You can add a default or adjust as needed
+            course = request.POST.get('course', 'Default Course')  # Default or manual input
             enrollment_date_str = request.POST.get('enrollment_date')
 
-            if name and age and enrollment_date_str:  # Basic validation
+            if user_id and name and age and enrollment_date_str:  # Basic validation
                 # Convert enrollment_date_str to a datetime object
                 try:
                     enrollment_date = datetime.datetime.strptime(enrollment_date_str, '%Y-%m-%d').date()
@@ -88,33 +153,43 @@ def manage_students(request):
                     messages.error(request, "Invalid enrollment date format. Please use YYYY-MM-DD.")
                     return redirect('manage_students')
 
-                # Check if a student with the same name already exists
-                if Student.objects.filter(name=name).exists():
-                    messages.error(request, f"Student with the name '{name}' already exists. Please try another name.")
+                # Check if a Student with the same user_id already exists
+                if Student.objects.filter(user_id=user_id).exists():
+                    messages.error(request, f"A student with the User ID '{user_id}' already exists. Please try another User ID.")
                 else:
                     # Create and save a new Student object
-                    student = Student.objects.create(name=name, age=age, course=course, enrollment_date=enrollment_date)
+                    student = Student.objects.create(
+                        user_id=user_id,
+                        name=name,
+                        age=age,
+                        course=course,
+                        enrollment_date=enrollment_date
+                    )
 
-                    # Create a User with the same name as username and enrollment_date as password
+                    # Create a User with the user_id as the username and enrollment_date as the password
                     user = User.objects.create_user(
-                        username=name,
-                        password=enrollment_date_str  # Use the string format of enrollment_date
+                        username=user_id,  # Use user_id as the username for the User model
+                        password=enrollment_date_str  # Use the string format of enrollment_date as the password
                     )
 
                     # Add the user to the 'Student' group
                     student_group, created = Group.objects.get_or_create(name='Student')
                     user.groups.add(student_group)
 
-                    messages.success(request,
-                                     f"Student '{name}' has been successfully added with username '{name}' and password '{enrollment_date_str}'.")
+                    messages.success(
+                        request,
+                        f"Student '{name}' has been successfully added with User ID '{user_id}' and password '{enrollment_date_str}'."
+                    )
                     return redirect('manage_students')  # Redirect to the same page after saving
 
+        # Fetch all students to display
         students = Student.objects.all()
         return render(request, "manage_students.html", {
             "students": students,
         })
     else:
         return HttpResponse("Unauthorized", status=401)
+
 
 
 @login_required

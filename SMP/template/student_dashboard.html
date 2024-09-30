@@ -5,6 +5,17 @@
     <section class="bg-white dark:bg-gray-900 h-screen ">
         <div class="py-8 px-4 mx-auto max-w-screen-xl sm:py-16 lg:px-6">
             <div class="max-w-screen-md">
+
+                <div class="mt-20">
+            {% if messages %}
+                <ul class="messages">
+                    {% for message in messages %}
+                        <li{% if message.tags %} class="{{ message.tags }} text-green-500 "{% endif %}>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            </div>
+
                 <h2 class="mb-4 text-4xl tracking-tight font-extrabold text-gray-900 dark:text-white">Welcome to library dashboard</h2>
                 <p class="mb-8 font-light text-gray-500 sm:text-xl dark:text-gray-400">
                     The pursuit of learning is not just about grades, but about growing, discovering, and finding your passion.You have to build your dreams, so dive in, stay curious, and let your mind wander freely. We're thrilled to be a part of your academic adventure!
