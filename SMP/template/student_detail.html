@@ -137,7 +137,9 @@
 
             <div class="w-full h-fill max-w-sm bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
 
+
                 <img src="{{ student.profile_image.url }}" alt="Profile Image">
+
 
                 <div class="flex flex-col items-center p-10">
                     <h5 class="mb-1 text-xl font-medium text-gray-900 dark:text-white">{{ student.name }}</h5>
@@ -147,6 +149,7 @@
                     <span class="text-sm text-gray-500 dark:text-gray-400">Enrollment Date : {{ student.enrollment_date }}</span>
 
                     <span class="text-sm text-gray-500 dark:text-gray-400">address : {{ student.address }}</span>
+                    <span class="text-sm text-gray-500 dark:text-gray-400">phone number : {{ student.phone_number }}</span>
                 </div>
             </div>
 

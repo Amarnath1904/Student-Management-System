@@ -1,5 +1,5 @@
 from django.db import models
-from django.utils import timezone
+from numpy.ma.core import minimum
 
 
 class Student(models.Model):
@@ -10,6 +10,7 @@ class Student(models.Model):
     enrollment_date = models.DateField()
     profile_image = models.ImageField(upload_to='profile_images/', null=False, blank=False)
     address = models.TextField(null=False, blank=False)
+    phone_number = models.CharField(max_length=12, null=False, blank=False)
 
     def __str__(self):
         return f"{self.user_id} - {self.name}"

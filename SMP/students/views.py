@@ -47,6 +47,7 @@ def signup_view(request):
         enrollment_date_str = request.POST.get('enrollment_date')
         address = request.POST.get('address')
         profile_image = request.FILES.get('profile_image')
+        phone_number = request.POST.get('phone_number')
 
         # Validation: Ensure all compulsory fields are filled in
         if not user_id or not name or not age or not course or not enrollment_date_str or not address or not profile_image:
@@ -73,14 +74,15 @@ def signup_view(request):
             profile_image_url = fs.url(profile_image_filename)
 
         # Create the Student record
-        student = Student.objects.create(
+        Student.objects.create(
             user_id=user_id,
             name=name,
             age=age,
             course=course,
             enrollment_date=enrollment_date,
             address=address,
-            profile_image=profile_image  # Set the profile image if uploaded
+            profile_image=profile_image , # Set the profile image if uploaded
+            phone_number = phone_number
         )
 
         # Create a corresponding User
@@ -136,7 +138,6 @@ def student_dashboard(request):
 @login_required
 def manage_students(request):
     if request.user.groups.filter(name="Admin").exists():
-        message = ""
         if request.method == "POST":
             # Manually extract user_id, name, age, course, and enrollment date from POST data
             user_id = request.POST.get('user_id')  # Extracting user_id
@@ -144,8 +145,13 @@ def manage_students(request):
             age = request.POST.get('age')
             course = request.POST.get('course', 'Default Course')  # Default or manual input
             enrollment_date_str = request.POST.get('enrollment_date')
+            address = request.POST.get('address')
+            profile_image = request.FILES.get('profile_image')
+            phone_number = request.POST.get('phone_number')
 
-            if user_id and name and age and enrollment_date_str:  # Basic validation
+
+
+            if user_id and name and age and enrollment_date_str and course and enrollment_date_str and address and profile_image and phone_number:  # Basic validation
                 # Convert enrollment_date_str to a datetime object
                 try:
                     enrollment_date = datetime.datetime.strptime(enrollment_date_str, '%Y-%m-%d').date()
@@ -153,18 +159,29 @@ def manage_students(request):
                     messages.error(request, "Invalid enrollment date format. Please use YYYY-MM-DD.")
                     return redirect('manage_students')
 
+                # Handle file upload
+                if profile_image:
+                    fs = FileSystemStorage()
+                    profile_image_filename = fs.save(profile_image.name, profile_image)
+                    profile_image_url = fs.url(profile_image_filename)
+
                 # Check if a Student with the same user_id already exists
                 if Student.objects.filter(user_id=user_id).exists():
                     messages.error(request, f"A student with the User ID '{user_id}' already exists. Please try another User ID.")
                 else:
                     # Create and save a new Student object
-                    student = Student.objects.create(
+                    Student.objects.create(
                         user_id=user_id,
                         name=name,
                         age=age,
                         course=course,
-                        enrollment_date=enrollment_date
+                        enrollment_date=enrollment_date,
+                        address=address,
+                        profile_image=profile_image,
+                        phone_number = phone_number
                     )
+
+
 
                     # Create a User with the user_id as the username and enrollment_date as the password
                     user = User.objects.create_user(
@@ -238,7 +255,12 @@ def manage_fee_plans(request):
 def view_fee_status(request):
     student = get_object_or_404(Student, name=request.user.username)  # Adjust field as needed
     fee_records = student.fee_records.all()
+
+    if not fee_records.exists():
+        fee_records = None  # Pass None or an empty list to the template if no fee records
+
     return render(request, "view_fee_status.html", {"fee_records": fee_records})
+
 
 @login_required
 def manage_fees(request):
